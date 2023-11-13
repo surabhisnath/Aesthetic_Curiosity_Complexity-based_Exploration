@@ -1,1 +1,1 @@
-# inking_Aesthetics_Curiosity_using_Complexity
+# Linking Aesthetics and Curiosity using Complexity
