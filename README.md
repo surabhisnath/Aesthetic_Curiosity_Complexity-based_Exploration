@@ -16,6 +16,8 @@ complexity of the partial patterns that participants are immediately
 viewing, and  of the full pattern (that they might not ultimately see),
 together predict both the immediate probability of their moving on from a pattern, and the amount that it is explored. We interpret this finding in the light of our previous work relating similar measures of complexity to beauty. We discuss the potential of complexity, and aesthetic value more generally, to pave the way for further research on aesthetic decisions for example decisions pertaining to beauty, curiosity, and ultimately also creativity.
 
+![Abstract](figures/Abstract.png)
+
 ## Respository Description
 
 The repository contains the following folders:
@@ -24,7 +26,7 @@ The repository contains the following folders:
 - **generator**: `generator/cellular_automata.py` is the stimuli generation script. Generates 2 folders `generator/stimuli/` containing all stimuli and `generator/gifs/` containing stimuli evolutions saved as .gif files.
 - **measures**: this folder contains implementations of the 2 pattern quantification measures (LSC and intricacy) borrowed from Nath et al., 2023. 
 - **patterns**: contains all the patterns used in the extended-complexity and grid-search experiments. `complexity-extended/instructions` and `grid-search/instructions` folders contains the patterns used in the task descriptions, `complexity-extended/attentioncheck` folder consists of the patterns which were used as attention check in the extended-complexity experiment. `complexity-extended/experiment` folder consists of 4 sets each with 54 patterns used in the extended-complexity experiment. `grid-search/experiment` folder consists of 14 ranges of stimuli used in the grid-search experiment, each spanning a range of complexities (as per the metric).
-- **scripts**: contains analysis scripts for the extended-complexity and grid-search experiments. `complexity-extended/MixedEffectsModelling.R` conatins the modelling analyses for the extended-complexity experiment. `grid-search/DescriptiveAnalysis.ipynb` presents the descriptive analyses and `grid-search/Mixed_Effects_Modelling.R`, `grid-search/Survival_Analysis.R` contain the mixed effects regression and survival analysis modelling respectively. Plots and model fits are stored in `complexity-extended/plots`/`grid-search/plots` and `complexity-extended/model_fits`/`grid-search/model_fits` respectively.
+- **scripts**: contains analysis scripts for the extended-complexity and grid-search experiments. `complexity-extended/MixedEffectsModelling.R` contains the modelling analyses for the extended-complexity experiment. `grid-search/DescriptiveAnalysis.ipynb` presents the descriptive analyses and `grid-search/MixedEffectsModelling.R`, `grid-search/SurvivalAnalysis.R` contain the mixed effects regression and survival analysis modelling respectively. Plots and model fits are stored in `complexity-extended/plots`/`grid-search/plots` and `complexity-extended/model_fits`/`grid-search/model_fits` respectively.
 
 ## Setup
 
