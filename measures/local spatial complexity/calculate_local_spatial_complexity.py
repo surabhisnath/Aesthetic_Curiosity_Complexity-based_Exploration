@@ -1,5 +1,6 @@
 author = 'Surabhi S Nath'
 import numpy as np
+import pytest
 
 """
 This module implements the local spatial complexity measure based on Javaheri Javid, M. A. (2019). Aesthetic Automata: Synthesis and Simulation of Aesthetic Behaviour in Cellular Automata (Doctoral dissertation, Goldsmiths, University of London).
@@ -78,7 +79,7 @@ def calculate_local_spatial_complexity(grid, grid_size):
 		tuple: local spatial complexity and local asymmetry
 	"""
 	grid = grid.reshape(grid_size, grid_size)
-	states = np.array([0, 1])	# 2 states as binary grid
+	states = np.unique(grid)
 	dirns = [1, 2, 3, 4, 5, 6, 7, 8]	# set of 8 directions
 	
 	# Calculate spatial complexity
@@ -107,7 +108,8 @@ def calculate_local_spatial_complexity(grid, grid_size):
 	return local_spatial_complexity, local_asymm
 
 if __name__ == "__main__":
-	grid_size = 15
+
+	grid_size = 27
 
 	# calculate density for some example patterns:
 	#    1) Full black pattern
@@ -121,7 +123,7 @@ if __name__ == "__main__":
 
 	grid_with_one_centre = np.zeros(grid_size * grid_size, dtype=int)
 	grid_with_one_centre[(grid_size * grid_size) //2] = 1
-	assert calculate_local_spatial_complexity(grid_with_one_centre, grid_size) == (0.04331646911530629, 0.0)
+	assert calculate_local_spatial_complexity(grid_with_one_centre, grid_size) == (0.015480986966185604, 0.0)
 	print(calculate_local_spatial_complexity(grid_with_one_centre, grid_size))
 
 	checkerboard = np.zeros(grid_size * grid_size, dtype=int)

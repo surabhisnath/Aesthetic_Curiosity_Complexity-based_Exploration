@@ -46,6 +46,10 @@
   data$num_revealed = as.numeric(data$num_revealed)
   data$visible_complexity_rating = my_scale(data$visible_complexity_rating)
   data$imagined_complexity_rating = my_scale(data$imagined_complexity_rating)
+  data$LSC_sq = my_scale(data$LSC ^ 2)
+  data$intricacy_sq = my_scale(data$intricacy ^ 2)
+  data$underlying_LSC_sq = my_scale(data$underlying_LSC ^ 2)
+  data$underlying_intricacy_sq = my_scale(data$underlying_intricacy ^ 2)
   data$LSC = my_scale(data$LSC)
   data$intricacy = my_scale(data$intricacy)
   data$underlying_LSC = my_scale(data$underlying_LSC)
@@ -84,12 +88,15 @@ models <- list(
   "1 + (1 | subject)",
   "LSC + (1 | subject)",
   "intricacy + (1 | subject)",
+  "imagined_complexity_rating + (1 | subject)",
   "LSC + intricacy + (1 | subject)",
+  "LSC + intricacy + imagined_complexity_rating + (1 | subject)",
   "underlying_LSC + underlying_intricacy + (1 | subject)",
   "LSC + intricacy + num_revealed + num_colours + (1 | subject)",
   "LSC + intricacy + underlying_LSC + underlying_intricacy + (1 | subject)",
   "LSC * intricacy + underlying_LSC * underlying_intricacy + (1 | subject)",
   "LSC * underlying_LSC + intricacy * underlying_intricacy + (1 | subject)",
+  "LSC_sq + intricacy_sq + underlying_LSC_sq + underlying_intricacy_sq + (1 | subject)",
   "LSC + intricacy + underlying_LSC + underlying_intricacy + ((LSC + underlying_LSC) | subject)",
   "LSC * underlying_LSC + intricacy * underlying_intricacy + ((LSC + intricacy) | subject)",
   "LSC * underlying_LSC + intricacy * underlying_intricacy + ((LSC + underlying_LSC) | subject)",

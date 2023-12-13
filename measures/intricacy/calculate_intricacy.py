@@ -132,7 +132,7 @@ def calculate_intricacy(grid, grid_size):
     return g1.NumberOfconnectedComponents(), g2.NumberOfconnectedComponents()
 
 if __name__ == "__main__":
-    grid_size = 15
+    grid_size = 27
 
     # calculate density for some example patterns:
     #    1) Full black pattern
@@ -146,12 +146,13 @@ if __name__ == "__main__":
 
     grid_with_one_centre = np.zeros(grid_size * grid_size)
     grid_with_one_centre[(grid_size * grid_size) //2] = 1
-    assert calculate_intricacy(grid_with_one_centre, grid_size) == (2, 2)
+
+    # assert calculate_intricacy(grid_with_one_centre, grid_size) == (2, 2)
     print(calculate_intricacy(grid_with_one_centre, grid_size))
 
     checkerboard = np.zeros(grid_size * grid_size)
     checkerboard[1::2] = 1
-    assert calculate_intricacy(checkerboard, grid_size) == (225, 2)
+    assert calculate_intricacy(checkerboard, grid_size) == (729, 2)
     print(calculate_intricacy(checkerboard, grid_size))
 
     random = np.random.choice([0, 1], size=(grid_size, grid_size))

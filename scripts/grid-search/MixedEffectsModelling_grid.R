@@ -1,8 +1,9 @@
 ## Author: Surabhi S Nath
-## Description: This script implements mixed effects models at grid level.
+## Description: This script implements mixed effects models.
 ## on grid-search exploration data.
 ## Helper functions and code for plotting in utils/Utils.R
 ## model analysis table written to model_fits/
+## model plots written to plots/
 
 # Imports
 {
@@ -43,14 +44,19 @@
   data$Subject <- factor(data$Subject)
   data$grid_id <- factor(data$grid_id)
   data$pattern <- factor(data$pattern)
-  data$underlying_LSC_sq <- my_scale(data$underlying_LSC ^ 2)
-  data$underlying_LSC <- my_scale(data$underlying_LSC)
-  data$underlying_intricacy_sq <- my_scale(data$underlying_intricacy ^ 2)
-  data$underlying_intricacy <- my_scale(data$underlying_intricacy)
-  data$final_LSC_sq <- my_scale(data$final_LSC ^ 2)
-  data$final_LSC <- my_scale(data$final_LSC)
-  data$final_intricacy_sq <- my_scale(data$final_intricacy ^ 2)
-  data$final_intricacy <- my_scale(data$final_intricacy)
+
+  data$uLSC <- my_scale(data$underlying_LSC)
+  data$uLSCsq <- data$uLSC ^ 2
+
+  data$uInt <- my_scale(data$underlying_intricacy)
+  data$uIntsq <- data$uInt ^ 2
+
+  data$vLSC <- my_scale(data$final_LSC)
+  data$vLSCsq <- data$vLSC ^ 2
+
+  data$vInt <- my_scale(data$final_intricacy)
+  data$vIntsq <- data$vInt ^ 2
+
   data$avg_LSC <- my_scale(data$avg_LSC)
   data$avg_intricacy <- my_scale(data$avg_intricacy)
   data$final_change_in_LSC <- my_scale(data$final_change_in_LSC)
@@ -59,6 +65,7 @@
   data$avg_change_in_intricacy <- my_scale(data$avg_change_in_intricacy)
 }
 
+# Split the data into 3 stratified folds
 {
   num_folds <- 3
 
@@ -88,26 +95,43 @@
 # Mixed Effects Models
 models <- list(
   "1 + (1 | Subject)",
-  "underlying_LSC + underlying_intricacy + (1 | Subject)",
-  "final_LSC + final_intricacy + (1 | Subject)",
+
+  "uLSC + uInt + (1 | Subject)",
+  "vLSC + vInt + (1 | Subject)",
+  "uLSC + vLSC + (1 | Subject)",
+  "uInt + vInt + (1 | Subject)",
+
+  "uLSC + uInt + vLSC + vInt + (1 | Subject)",
+  
+  "uLSC * vLSC + (1 | Subject)",
+  "uInt * vInt + (1 | Subject)",
+  "uLSC * uInt + (1 | Subject)",
+  "vLSC * vInt + (1 | Subject)",
+  
+  "uLSC * vLSC + uInt * vInt + (1 | Subject)",  # best
+  "uLSC * uInt + vLSC * vInt + (1 | Subject)",
+  "uLSC + uInt + vLSC + vInt + uLSC:vInt + vLSC:uInt + (1 | Subject)",
+  "uLSC + vLSC + uInt + vInt + uLSC:vLSC + uInt:vInt + uLSC:uInt + vLSC:vInt + uLSC:vInt + vLSC:uInt + (1 | Subject)",
+  
+
+  # Supplementary analysis
+
+  # change in complexity
   "final_change_in_LSC + final_change_in_intricacy + (1 | Subject)",
-  "underlying_LSC + underlying_intricacy + final_LSC + final_intricacy + (1 | Subject)",
-  "underlying_LSC_sq + underlying_intricacy_sq + final_LSC_sq + final_intricacy_sq + (1 | Subject)",
-  "underlying_LSC + underlying_intricacy + final_LSC + final_intricacy + (underlying_LSC + underlying_intricacy| Subject)",
-  "underlying_LSC + underlying_intricacy + final_LSC + final_intricacy + (final_LSC + final_intricacy| Subject)",
-  "avg_LSC + avg_intricacy + (1 | Subject)",
-  "underlying_LSC + underlying_intricacy + final_LSC + final_intricacy + final_change_in_LSC + final_change_in_intricacy + (1 | Subject)",
-  "underlying_LSC * underlying_intricacy + (1 | Subject)",
-  "final_LSC * final_intricacy + (1 | Subject)",
-  "underlying_LSC * final_LSC + (1 | Subject)",
-  "underlying_intricacy * final_intricacy + (1 | Subject)",
-  "underlying_LSC * final_LSC + underlying_intricacy * final_intricacy + (1 | Subject)",
-  "underlying_LSC_sq * underlying_intricacy_sq + final_LSC_sq * final_intricacy_sq + (1 | Subject)",
-  "underlying_LSC * final_LSC * underlying_intricacy * final_intricacy + (1 | Subject)",
-  "underlying_LSC * final_change_in_LSC + underlying_intricacy * final_change_in_intricacy + (1 | Subject)"
+  "uLSC + uInt + vLSC + vInt + final_change_in_LSC + final_change_in_intricacy + (1 | Subject)",
+
+  # quadratic effects
+  "uLSCsq + uIntsq + vLSCsq + vIntsq + (1 | Subject)",
+  "uLSCsq + vLSCsq + uIntsq + vIntsq + uLSC:vLSC + uInt:vInt + (1 | Subject)",
+  "uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + (1 | Subject)", # L^2 + I^2
+  "(uLSCsq + vLSCsq + uLSC:vLSC) + (uIntsq + vIntsq + uInt:vInt) + (uLSC + vLSC):(uInt + vInt) + (1 | Subject)", # (L + I)^2
+  "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + (1 | Subject)", # L + I + L^2 + I^2 - interactions
+  "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + (1 | Subject)", # best = L + I + L^2 + I^2
+  "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + uLSC:uInt + vLSC:vInt + (1 | Subject)",
+  "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + uLSC:uInt + vLSC:vInt + uLSC:vInt + uInt:vLSC + (1 | Subject)" # L + I + (L + I)^2
 )
 
-# Save all results to model_fits/Table_4_grid_level.csv
+# Save all results to model_fits/Table_3_mixedeffects.csv
 {
   df <- data.frame(matrix(ncol = 13, nrow = 0, dimnames =
   list(NULL, c("Id", "model", "AIC", "BIC", "AIC/BIC Var",
@@ -133,35 +157,67 @@ models <- list(
     df[nrow(df) + 1, ] <- c(id, noquote(fullformula), metrics)
   }
 
-  write.csv(df, "model_fits/Table_4_grid_level.csv", row.names = FALSE)
+  write.csv(df, "model_fits/Table_3_mixedeffects.csv", row.names = FALSE)
 }
 
 # Evaluate performance of best model and make plots
 # for train, test and random effects
 # Plots saved to ./plots/
 {
-  bestformula <- "num_clicks ~ underlying_LSC * final_LSC + underlying_intricacy * final_intricacy + (1 | Subject)"
-  f1 <- lmer(bestformula, data = data_train_fold1,
-  control = lmerControl(optimizer = "bobyqa"))
-  f2 <- lmer(bestformula, data = data_train_fold2,
-  control = lmerControl(optimizer = "bobyqa"))
-  f3 <- lmer(bestformula, data = data_train_fold3,
-  control = lmerControl(optimizer = "bobyqa"))
-  f <- lmer(bestformula, data = data_train_fold1,
-  control = lmerControl(optimizer = "bobyqa"))
+  bestformula <- "num_clicks ~ uLSC + vLSC + uInt + vInt + uLSC:vLSC + uInt:vInt + (1 | Subject)"
 
-  # Plots data vs predictions on train and test data
-  metrics <- modelanalysis(num_folds,
-  list(f1, f2, f3), list(data_train_fold1, data_train_fold2,
-  data_train_fold3), list(data_test_fold1, data_test_fold2, data_test_fold3),
-  FALSE, TRUE)
+  f <- lmer(bestformula, data = data,
+  control = lmerControl(optimizer = "nloptwrap"))
 
-  # Plots random effects
+  # make and save model vs predictions of train and test - Figure 3a,b
+  make_plots(f, data_train_fold1, data_test_fold1)
+
+  # Plot and save random effects
   ggCaterpillar(ranef(f, condVar = TRUE))
   ggsave("plots/random_effects_num_clicks.pdf")
 }
 
-# Save fixed effects to model_fits/ - Table 5
+# Save fixed effects to model_fits/ - Table 4
 {
-  write.csv(fixef(f), file = "model_fits/Table_5_coeff_num_clicks.csv")
+  model_summary <- summary(f)
+  coefficients <- fixef(f)
+  standard_errors <- sqrt(diag(vcov(f)))
+  variable_names <- rownames(summary(f)$coefficients)
+  p_values <- coef(summary(f))[, "Pr(>|t|)"]
+  signif_levels <- ifelse(p_values < 0.001, "***", ifelse(p_values < 0.01, "**", ifelse(p_values < 0.05, "*", ifelse(p_values < 0.1, ".", "NS"))))
+  results_df <- data.frame(Variable = variable_names, Coefficients = coefficients, StdError = standard_errors, PValue = p_values, Significance = signif_levels)
+  write.csv(results_df, file = "model_fits/Table_4_coeff_num_clicks.csv", row.names = FALSE)
+}
+
+# plot interactions - Figure 3c,d
+{
+  p <- interact_plot(f,
+      pred = vLSC, modx = uLSC, interval = TRUE,
+      x.label = "vLSC", y.label = "Number of Clicks",
+      legend.main = "uLSC", colors = "seagreen"
+  ) + theme(
+      axis.title = element_text(family = "serif", size = 44),
+      axis.text = element_text(family = "serif", size = 26),
+      legend.text = element_text(family = "serif", size = 30),
+      legend.title = element_text(family = "serif", size = 40),
+      strip.text = element_text(family = "serif")
+  )
+
+  # Figure 3c
+  ggsave(filename = "plots/uLSC_vLSC_interaction.pdf", plot = p, width = 10, height = 10, units = "in")
+
+  p <- interact_plot(f,
+      pred = vInt, modx = uInt, interval = TRUE,
+      x.label = "vInt", y.label = "Number of Clicks",
+      legend.main = "uInt", colors = "seagreen"
+  ) + theme(
+      axis.title = element_text(family = "serif", size = 44),
+      axis.text = element_text(family = "serif", size = 26),
+      legend.text = element_text(family = "serif", size = 30),
+      legend.title = element_text(family = "serif", size = 44),
+      strip.text = element_text(family = "serif")
+  )
+
+  # Figure 3d
+  ggsave(filename = "plots/uInt_vInt_interaction.pdf", plot = p, width = 10, height = 10, units = "in")
 }

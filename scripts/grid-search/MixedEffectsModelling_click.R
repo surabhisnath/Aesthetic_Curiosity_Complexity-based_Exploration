@@ -1,8 +1,9 @@
 ## Author: Surabhi S Nath
-## Description: This script implements survival analysis (Cox regression) models at click level.
+## Description: This script implements survival analysis (Cox regression) models.
 ## on grid-search exploration data.
 ## Helper functions and code for plotting in utils/Utils.R
 ## model analysis table written to model_fits/
+## model plots written to plots/
 
 # Imports
 {
@@ -24,8 +25,12 @@
     library("survminer")
     library(jtools)
     library(interactions)
+    library(dplyr)
 
     source("utils/Utils.R")
+
+    # Set seed 
+    set.seed(25) # Seed set randomly for reproducibility
 }
 
 # Setup
@@ -40,21 +45,57 @@
 
     data$Subject <- factor(data$Subject)
     data$click_id <- as.numeric(data$click_id)
-    data$current_LSC_sq <- my_scale(data$current_LSC ^ 2)
-    data$current_LSC <- my_scale(data$current_LSC)
-    data$current_intricacy_sq <- my_scale(data$current_intricacy ^ 2)
-    data$current_intricacy <- my_scale(data$current_intricacy)
-    data$underlying_LSC_sq <- my_scale(data$underlying_LSC ^ 2)
-    data$underlying_LSC <- my_scale(data$underlying_LSC)
-    data$underlying_intricacy_sq <- my_scale(data$underlying_intricacy ^ 2)
-    data$underlying_intricacy <- my_scale(data$underlying_intricacy)
+    
+    data$uLSC <- my_scale(data$underlying_LSC)
+    data$uLSCsq <- data$uLSC ^ 2
+
+    data$vLSC <- my_scale(data$current_LSC)
+    data$vLSCsq <- data$vLSC ^ 2
+    
+    data$uInt <- my_scale(data$underlying_intricacy)
+    data$uIntsq <- data$uInt ^ 2
+
+    data$vInt <- my_scale(data$current_intricacy)
+    data$vIntsq <- data$vInt ^ 2
+
     data$current_change_in_LSC <- my_scale(data$current_change_in_LSC)
     data$current_change_in_intricacy <- my_scale(data$current_change_in_intricacy)
     data$avg_change_in_LSC <- my_scale(data$avg_change_in_LSC)
     data$avg_change_in_intricacy <- my_scale(data$avg_change_in_intricacy)
 }
 
+# Make correlation plot - not used in paper
+{
+    selected_data <- data[, c("uLSC", "vLSC", "uInt", "vInt", "uLSCsq", "vLSCsq", "uIntsq", "vIntsq")]
+    correlation_matrix <- cor(selected_data)
+    colnames(correlation_matrix) <- c("uLSC", "vLSC", "uInt", "vInt","uLSC^2", "vLSC^2", "uInt^2", "vInt^2") # Rename columns
+    rownames(correlation_matrix) <- c("uLSC", "vLSC", "uInt", "vInt","uLSC^2", "vLSC^2", "uInt^2", "vInt^2") # Rename columns
+    correlation_matrix[lower.tri(correlation_matrix)] <- NA
+    pdf(file = "plots/correlations.pdf", width = 10, height = 10)
+    par(mar=c(7,5,5,2), cex = 1.3, family="serif")
 
+    # Plot the heatmap
+    image(1:ncol(correlation_matrix), 1:nrow(correlation_matrix), t(correlation_matrix), 
+        col = colorRampPalette(c("blue", "white", "red"))(20), axes = FALSE, xlab = "", ylab = "")
+
+    # Add text annotations for the correlation values
+    for (i in 1:nrow(correlation_matrix)) {
+        for (j in 1:ncol(correlation_matrix)) {
+            if (!is.na(correlation_matrix[i, j])) {
+                text(j, i, round(correlation_matrix[i, j], 2), cex = 1.3)
+            }
+        }
+    }
+
+    # Customize the row and column names
+    axis(1, at = 1:ncol(correlation_matrix), labels = colnames(correlation_matrix), las = 2, cex.axis = 1.4, family = "serif")
+    axis(2, at = 1:nrow(correlation_matrix), labels = rownames(correlation_matrix), las = 2, cex.axis = 1.4, family = "serif")
+
+    # save correlation plot
+    dev.off()
+}
+
+# Split the data into 3 stratified folds
 {
   num_folds <- 3
 
@@ -87,19 +128,42 @@
 # Cox regression models
 models <- list(
     "Subject",
-    "underlying_LSC + underlying_intricacy",
-    "current_LSC + current_intricacy",
-    "current_change_in_LSC + current_change_in_intricacy",
-    "underlying_LSC + underlying_intricacy + current_LSC + current_intricacy",
-    "underlying_LSC + underlying_intricacy + current_LSC + current_intricacy + current_change_in_LSC + current_change_in_intricacy",
-    "underlying_LSC_sq + underlying_intricacy_sq + current_LSC_sq + current_intricacy_sq",
-    "underlying_LSC * current_LSC",
-    "underlying_intricacy * current_intricacy",
-    "underlying_LSC * current_LSC + underlying_intricacy * current_intricacy",
-    "underlying_LSC * current_LSC + underlying_intricacy * current_intricacy + Subject"
+    
+    "uLSC + uInt + Subject",
+    "vLSC + vInt + Subject",
+    "uLSC + vLSC + Subject",
+    "uInt + vInt + Subject",
+
+    "uLSC + uInt + vLSC + vInt + Subject",
+    
+    "uLSC * vLSC + Subject",
+    "uInt * vInt + Subject",
+    "uLSC * uInt + Subject",
+    "vLSC * vInt + Subject",
+    
+    "uLSC * vLSC + uInt * vInt + Subject",  # best
+    "uLSC * uInt + vLSC * vInt + Subject",
+    "uLSC + uInt + vLSC + vInt + uLSC:vInt + vLSC:uInt + Subject",
+    "uLSC + vLSC + uInt + vInt + uLSC:vLSC + uInt:vInt + uLSC:uInt + vLSC:vInt + uLSC:vInt + vLSC:uInt + Subject",
+
+    # Supplementary analysis
+    
+    # change in complexity
+    "current_change_in_LSC + current_change_in_intricacy + Subject",
+    "uLSC + uInt + vLSC + vInt + current_change_in_LSC + current_change_in_intricacy + Subject",
+
+    # quadratic effects
+    "uLSCsq + uIntsq + vLSCsq + vIntsq + Subject",
+    "uLSCsq + vLSCsq + uIntsq + vIntsq + uLSC:vLSC + uInt:vInt + Subject",
+    "uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + Subject", # L^2 + I^2
+    "(uLSCsq + vLSCsq + uLSC:vLSC) + (uIntsq + vIntsq + uInt:vInt) + (uLSC + vLSC):(uInt + vInt) + Subject", # (L + I)^2
+    "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + Subject", # L + I + L^2 + I^2 - interactions
+    "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + Subject", # best = L + I + L^2 + I^2
+    "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + uLSC:uInt + vLSC:vInt + Subject",
+    "uLSC + vLSC + uInt + vInt + uLSCsq + uIntsq + vLSCsq + vIntsq + uLSC:vLSC + uInt:vInt + uLSC:uInt + vLSC:vInt + uLSC:vInt + uInt:vLSC + Subject" # L + I + (L + I)^2
 )
 
-# Save all results to model_fits/Table_2_click_level.csv
+# Save all results to model_fits/Table_1_click_level.csv
 {
     df <- data.frame(matrix(ncol = 8, nrow = 0, dimnames =
     list(NULL, c("Id", "model", "AIC", "BIC",
@@ -141,13 +205,104 @@ models <- list(
         df[nrow(df) + 1, ] <- c(id, noquote(fullformula), c(mean(AICs), mean(BICs), mean(concordances_train), mean(concordances_test), max(logrankp), max(likratiop)))
     }
 
-    write.csv(df, "model_fits/Table_2_click_level.csv", row.names = FALSE)
+    write.csv(df, "model_fits/Table_1_click_level.csv", row.names = FALSE)
 }
 
 
-# Save fixed effects to model_fits/ - Table 3
+# Save fixed effects to model_fits/ - Table 2
 {
-  bestformula <- as.formula("Surv(click_id, move_on) ~  underlying_LSC * current_LSC + underlying_intricacy * current_intricacy")
-  model <- coxph(bestformula, data = data_train_folds[[1]])
-  write.csv(coef(model), file = "model_fits/Table_3_coeff_move_on.csv")
+    bestformula <- as.formula("Surv(click_id, move_on) ~ uLSC * vLSC + uInt * vInt + Subject")
+
+    model <- coxph(bestformula, data = data)
+
+    model_matrix <- model.matrix(model)
+    model_df <- data.frame(model_matrix)
+    lm_model <- lm(rep(1, nrow(model_df)) ~ ., data = model_df)
+    vif_values <- vif(lm_model)
+    # print(vif_values)         # uncomment if want to print VIFs in the best model
+
+    coefficients <- coef(model)
+    exp_coefficients <- exp(coefficients)
+    coef_names <- names(coefficients)
+
+    p_values <- summary(model)$coefficients[, "Pr(>|z|)"]
+    signif_levels <- ifelse(p_values < 0.001, "***", ifelse(p_values < 0.01, "**", ifelse(p_values < 0.05, "*", ifelse(p_values < 0.1, ".", "NS"))))
+
+    # Combine them into a data frame
+    combined_data <- data.frame(Variable = coef_names, Coefficients = coefficients, ExpCoefficients = exp_coefficients, Significance = signif_levels)
+
+    # Write the data frame to a CSV file
+    write.csv(combined_data, file = "model_fits/Table_2_coeff_move_on.csv", row.names = FALSE)
+}
+
+# Plot survival curves keeping all but one or two (for interactions) variables constant - Figure 2
+{
+    # vLSC manipulation - Figure 2a
+    newdata <- data.frame(
+        vLSC = seq(mean(data$vLSC, na.rm = TRUE) - 2*sd(data$vLSC, na.rm = TRUE), mean(data$vLSC, na.rm = TRUE) + 2*sd(data$vLSC, na.rm = TRUE), length.out = 3),
+        uLSC = mean(data$uLSC, na.rm = TRUE),
+        uInt = mean(data$uInt, na.rm = TRUE),
+        vInt = mean(data$vInt, na.rm = TRUE),
+        Subject = factor(21)
+        )
+    var <- "vLSC"
+    filename <- paste0(var, "_survival_curve")
+    survival_prob(model, newdata, filename, var, c("- 2SD", "mean", "+ 2SD"))
+
+    # uInt manipulation - Figure 2b
+    newdata <- data.frame(
+        uInt = seq(mean(data$uInt, na.rm = TRUE) - 2*sd(data$uInt, na.rm = TRUE), mean(data$uInt, na.rm = TRUE) + 2*sd(data$uInt, na.rm = TRUE), length.out = 3),
+        uLSC = mean(data$uLSC, na.rm = TRUE),
+        vLSC = mean(data$vLSC, na.rm = TRUE),
+        vInt = mean(data$vInt, na.rm = TRUE),
+        Subject = factor(21)
+        )
+    var <- "uInt"
+    filename <- paste0(var, "_survival_curve")
+    survival_prob(model, newdata, filename, var, c("- 2SD", "mean", "+ 2SD"))
+
+    # vInt manipulation - not reported in paper
+    newdata <- data.frame(
+        vInt = seq(mean(data$vInt, na.rm = TRUE) - 2*sd(data$vInt, na.rm = TRUE), mean(data$vInt, na.rm = TRUE) + 2*sd(data$vInt, na.rm = TRUE), length.out = 3),
+        uLSC = mean(data$uLSC, na.rm = TRUE),
+        vLSC = mean(data$vLSC, na.rm = TRUE),
+        uInt = mean(data$uInt, na.rm = TRUE),
+        Subject = factor(21)
+        )
+    var <- "vInt"
+    filename <- paste0(var, "_survival_curve")
+    survival_prob(model, newdata, filename, var, c("- 2SD", "mean", "+ 2SD"))
+
+    # uLSC x vLSC manipulation - Figure 2c
+    v1 <- seq(mean(data$uLSC, na.rm = TRUE) - 2*sd(data$uLSC, na.rm = TRUE), mean(data$uLSC, na.rm = TRUE) + 2*sd(data$uLSC, na.rm = TRUE), length.out = 2)  # Values of uLSC for the three scenarios
+    v2 <- seq(mean(data$vLSC, na.rm = TRUE) - 2*sd(data$vLSC, na.rm = TRUE), mean(data$vLSC, na.rm = TRUE) + 2*sd(data$vLSC, na.rm = TRUE), length.out = 2)   # Values of vLSC for the three scenarios
+    newdata <- expand.grid(
+        uLSC = v1,
+        vLSC = v2
+    )
+    newdata$uInt <- mean(data$uInt, na.rm = TRUE)
+    newdata$vInt <- mean(data$vInt, na.rm = TRUE)
+    newdata$Subject <- factor(21)
+    var <- "uLSC:vLSC"
+    filename <- paste0(var, "_survival_curve")
+    survival_prob(model, newdata, filename, var, c("1", "2", "3", "4"))
+
+
+    # Participant manipulation - Figure 2d
+    unique_subjects <- unique(data$Subject)
+    indices <- c(1, 12, 21)
+    sampled_subjects <- unique_subjects[indices]
+    newdata_list <- lapply(sampled_subjects, function(subj) {
+    data.frame(
+        uLSC = mean(data$uLSC, na.rm = TRUE),
+        vLSC = mean(data$vLSC, na.rm = TRUE),
+        uInt = mean(data$uInt, na.rm = TRUE),
+        vInt = mean(data$vInt, na.rm = TRUE),
+        Subject = factor(subj, levels = levels(unique_subjects[indices]))
+    )
+    })
+    newdata <- bind_rows(newdata_list)
+    var <- "Participant"
+    filename <- paste0(var, "_survival_curve")
+    survival_prob(model, newdata, filename, var, c("1", "12", "21"))
 }
