@@ -7,3 +7,4 @@ scipy
 pillow
 pytest
 jupyterlab
+scikit-learn
