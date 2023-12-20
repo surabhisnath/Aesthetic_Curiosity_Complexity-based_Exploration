@@ -148,7 +148,7 @@ models <- list(
 # Plots saved to ./plots/
 {
   bestformula <- "visible_complexity_rating ~ LSC + intricacy + underlying_LSC + underlying_intricacy + ((LSC + underlying_LSC) | subject)"
-  f1 <- 
+  f1 <-
     lmer(bestformula, data = data_train_fold1,
          control = lmerControl(optimizer = "bobyqa"))
   f2 <-
@@ -157,7 +157,7 @@ models <- list(
   f3 <-
     lmer(bestformula, data = data_train_fold3,
          control = lmerControl(optimizer = "bobyqa"))
-  f <- 
+  f <-
     lmer(bestformula, data = data_train_fold1,
          control = lmerControl(optimizer = "bobyqa"))
 

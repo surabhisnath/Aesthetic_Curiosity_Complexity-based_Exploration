@@ -26,7 +26,10 @@ The repository contains the following folders:
 - **generator**: `generator/cellular_automata.py` is the stimuli generation script. Generates 2 folders `generator/stimuli/` containing all stimuli and `generator/gifs/` containing stimuli evolutions saved as .gif files.
 - **measures**: this folder contains implementations of the 2 pattern quantification measures (LSC and intricacy) borrowed from Nath et al., 2023. 
 - **patterns**: contains all the patterns used in the extended-complexity and grid-search experiments. `complexity-extended/instructions` and `grid-search/instructions` folders contains the patterns used in the task descriptions, `complexity-extended/attentioncheck` folder consists of the patterns which were used as attention check in the extended-complexity experiment. `complexity-extended/experiment` folder consists of 4 sets each with 54 patterns used in the extended-complexity experiment. `grid-search/experiment` folder consists of 14 ranges of stimuli used in the grid-search experiment, each spanning a range of complexities (as per the metric).
-- **scripts**: contains analysis scripts for the extended-complexity and grid-search experiments. `complexity-extended/MixedEffectsModelling.R` contains the modelling analyses for the extended-complexity experiment. `grid-search/DescriptiveAnalysis.ipynb` presents the descriptive analyses and `grid-search/MixedEffectsModelling.R`, `grid-search/SurvivalAnalysis.R` contain the mixed effects regression and survival analysis modelling respectively. Plots and model fits are stored in `complexity-extended/plots`/`grid-search/plots` and `complexity-extended/model_fits`/`grid-search/model_fits` respectively.
+
+- **scripts/complexity-extended**: contains analysis scripts for the extended-complexity experiment. `MixedEffectsModelling.R` contains the modelling analyses for the extended-complexity experiment. Plots and model fits are stored in `plots` and `model_fits` respectively.
+
+- **scripts/grid-search**: contains analysis scripts for the grid-search experiments. `DescriptiveAnalysis.ipynb` presents the descriptive analyses and `MixedEffectsModelling.R`, `SurvivalAnalysis.R` contain the mixed effects regression and survival analysis modelling respectively. Plots and model fits are stored in `plots` and `model_fits` respectively.
 
 ## Setup
 
