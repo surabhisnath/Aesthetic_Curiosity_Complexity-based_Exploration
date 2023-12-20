@@ -33,7 +33,7 @@
   data <- read.csv("utils/data.csv")
   # remove subjects who failed all attention checks
   all_attention_failed <- c("fafl6odp", "s7hnc00q", "p60mbj11")
-  data <- data[! data$subject %in% all_attention_failed]
+  data <- data[! data$subject %in% all_attention_failed, ]
 
   # Scale all variables in the data
   my_scale <- function(x) {
