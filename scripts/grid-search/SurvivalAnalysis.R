@@ -164,7 +164,7 @@ models <- list(
   "uLSC + vLSC + uInt + vInt + uLSC:vLSC + uInt:vInt + uLSC:uInt + vLSC:vInt + uLSC:vInt + vLSC:uInt + Subject",
 
   # Supplementary analysis
-  
+
   # change in complexity
   "current_change_in_LSC + current_change_in_intricacy + Subject",
   "uLSC + uInt + vLSC + vInt + current_change_in_LSC + current_change_in_intricacy + Subject",
@@ -208,7 +208,7 @@ models <- list(
       model <- coxph(formula, data = data_train_folds[[x]])
 
       # calculate metrics and store in arrays
-      modsum = summary(model)
+      modsum <- summary(model)
       logrankp[[x]] <- modsum$logtest["pvalue"]
       likratiop[[x]] <- modsum$sctest["pvalue"]
 
@@ -217,8 +217,8 @@ models <- list(
       concordances_train[[x]] <-
         survConcordance(Surv(click_id, move_on) ~ pred_train,
                         data = data_train_folds[[x]])$concordance
-      pred_test <- predict(model, newdata = data_test_folds[[x]],
-                           type = "risk")
+      pred_test <-
+        predict(model, newdata = data_test_folds[[x]], type = "risk")
       concordances_test[[x]] <-
         survConcordance(Surv(click_id, move_on) ~ pred_test,
                         data = data_test_folds[[x]])$concordance
