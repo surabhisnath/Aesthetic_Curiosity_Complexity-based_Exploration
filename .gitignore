@@ -1,1 +1,8 @@
 .DS_Store
+env
+venv
+.env
+.venv
+__pycache__/
+**/.RData
+**/.Rhistory
