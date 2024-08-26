@@ -16,6 +16,8 @@ complexity of the partial patterns that participants are immediately
 viewing, and  of the full pattern (that they might not ultimately see),
 together predict both the immediate probability of their moving on from a pattern, and the amount that it is explored. We interpret this finding in the light of our previous work relating similar measures of complexity to beauty. We discuss the potential of complexity, and aesthetic value more generally, to pave the way for further research on aesthetic decisions for example decisions pertaining to beauty, curiosity, and ultimately also creativity.
 
+A demo video of the task is provided [here](https://drive.google.com/file/d/1_AMR0RhatSbPrcMZcLu1wcWOLTfgSY2t/view?usp=sharing).
+
 ![Abstract](figures/Abstract.png)
 
 ## Respository Description
